@@ -33,7 +33,7 @@ struct AcqOpts {
     detrend: Detrend,
 
     /// Sample rate in Hertz
-    #[arg(long, default_value_t = 1.0f32)]
+    #[arg(long, default_value_t = 200e3f32)]
     fs: f32,
 
     /// Averaging limit
