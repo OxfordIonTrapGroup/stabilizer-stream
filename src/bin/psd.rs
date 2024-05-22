@@ -33,7 +33,7 @@ struct AcqOpts {
     detrend: Detrend,
 
     /// Sample rate in Hertz
-    #[arg(long, default_value_t = 200e3f32)]
+    #[arg(long, default_value_t = 781.25e3f32)]
     fs: f32,
 
     /// Averaging limit
@@ -65,6 +65,10 @@ struct AcqOpts {
 
     #[arg(long, default_value_t = 0.5)]
     integral_end: f32,
+    
+    /// Use FNC defaults for signal analysis
+    #[arg(long)]
+    fnc: bool,
 }
 
 impl AcqOpts {
@@ -156,6 +160,11 @@ impl Trace {
 fn main() -> Result<()> {
     env_logger::init();
     let Opts { source, mut acq } = Opts::parse();
+
+    if acq.fnc {
+        acq.fs = 200e3f32;
+    }
+
     acq.integral_end *= acq.fs;
     acq.integral_start *= acq.fs;
 
