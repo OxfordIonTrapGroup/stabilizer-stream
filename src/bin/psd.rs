@@ -143,7 +143,12 @@ impl Trace {
                     Some([
                         (f.log10() + logfs) as f64,
                         (if acq.integrate {
-                            p0.get().sqrt()
+                            if acq.fnc {
+                                // If operated in FNC mode, the integration result is rescaled to give it in terms of turns rather than volts
+                                p0.get().sqrt() * (1.0 / (1 << 14) as f32) / ((4.096 * 5.0) / (1 << 16) as f32)
+                            } else {
+                                p0.get().sqrt()
+                            }
                         } else {
                             10.0 * (p.log10() - logfs)
                         }) as f64,
@@ -391,7 +396,7 @@ impl App {
             .link_axis("plots", false, false)
             .auto_bounds([true; 2].into())
             .y_axis_width(4)
-            .y_axis_label("Power spectral density (dB/Hz) or integrated RMS")
+            .y_axis_label("Power spectral density (dB/Hz) or integrated RMS amplitude")
             .legend(Legend::default())
             .label_formatter(log10x_formatter)
             .show(ui, |plot_ui| {
