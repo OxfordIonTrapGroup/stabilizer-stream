@@ -12,6 +12,10 @@ use egui_plot::{
 };
 use std::{ops::RangeInclusive, sync::mpsc, time::Duration};
 
+use std::error::Error;
+use std::fs::File;
+use csv::Writer;
+
 use stabilizer_stream::{
     source::{Source, SourceOpts},
     AvgOpts, Break, Detrend, MergeOpts, PsdCascade,
@@ -319,6 +323,23 @@ impl eframe::App for App {
 }
 
 impl App {
+    fn write_to_csv(data: &Vec<[f64; 2]>, file_path: &str) -> Result<(), Box<dyn Error>> {
+        let file = File::create(file_path)?;
+        let mut wtr = Writer::from_writer(file);
+    
+        // Write the header (optional)
+        wtr.write_record(&["log_10 f", "PSD (dB/Hz) or integrated RMS amplitude"])?;
+    
+        // Write the data
+        for &[x, y] in data {
+            wtr.write_record(&[x.to_string(), y.to_string()])?;
+        }
+    
+        // Flush the writer to ensure all data is written
+        wtr.flush()?;
+        Ok(())
+    }
+
     fn plot(&mut self, ui: &mut Ui) {
         Plot::new("stages")
             .link_axis("plots", true, false)
@@ -427,6 +448,7 @@ impl App {
         {
             self.cmd_send.send(Cmd::Reset).unwrap();
         }
+        ui.separator();
         ui.add(
             Slider::new(&mut self.repaint, 0.01..=10.0)
                 .text("Repaint")
@@ -455,6 +477,21 @@ impl App {
             })
             .response
             .on_hover_text("Segment detrending method");
+        ui.separator();
+        if ui
+            .button("Save trace")
+            .on_hover_text("Save trace")
+            .clicked()
+        {
+            for (name, trace, _) in self.current.iter() {
+                // Get the first character of the name, defaulting to an empty string if it's empty
+                let first_char = name.chars().next().unwrap_or_default();
+                // Create the file path by adding .csv to the the first character of the name
+                let file_path = format!("{}{}", first_char, ".csv");
+                // Save each trace to a CSV file
+                App::write_to_csv(&trace, &file_path).ok();
+            }
+        }
     }
 
     fn row1(&mut self, ui: &mut Ui) {

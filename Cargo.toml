@@ -26,6 +26,7 @@ idsp = "0.15"
 rustfft = "6.1.0"
 rand = { version = "0.8.5", features = ["small_rng"] }
 derive_builder = "0.20.0"
+csv = "1.3.0"
 
 [profile.release]
 debug = 1
